@@ -1,0 +1,22 @@
+DEPLOY STEPS (GitHub -> Vercel)
+
+1) Create a new GitHub repository (public or private) and push the contents of this ZIP to the repo root.
+   - Ensure package.json, vite.config.js, index.html, and src/ are in the repo root (not nested in a folder).
+
+2) In Vercel dashboard, click 'New Project' -> 'Import Git Repository' -> connect your GitHub and choose the repo.
+   - Framework Preset: Vite
+   - Build Command: npm run build
+   - Output Directory: dist
+   - Install Command: npm install
+
+3) Set Environment Variables in Vercel (Project Settings -> Environment Variables):
+   - OPENAI_API_KEY = (your OpenAI key)
+   - SUPPORT_EMAIL = rcnsuporte048@gmail.com
+
+4) Deploy. Vercel will run npm install and npm run build and publish the site.
+
+5) If you prefer Upload method: In Vercel -> New Project -> Upload Project (choose this ZIP). Then set build/output as above.
+
+Notes:
+- Do NOT commit secret keys to GitHub. Use Vercel env vars for OPENAI_API_KEY.
+- If you embedded keys locally for testing, remove them before committing.
