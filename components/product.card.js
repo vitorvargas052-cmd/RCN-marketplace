@@ -1,28 +1,32 @@
-"use client"
+"use client";
+import { useState } from "react";
 
-export default function ProductCard({ product, onFavorite }) {
+export default function ProductCard({ product }) {
+  const [fav, setFav] = useState(false);
+
+  const toggleFavorite = () => setFav(!fav);
+
   return (
-    <div className="border rounded-lg p-3 bg-white shadow-md hover:shadow-lg transition">
+    <div className="bg-[#181818] border border-gray-800 rounded-xl p-4 shadow hover:shadow-emerald-500/10 transition relative">
       <img
-        src={product.image_url}
+        src={product.image || "/placeholder.png"}
         alt={product.title}
-        className="w-full h-40 object-cover rounded"
+        className="w-full h-40 object-cover rounded-md mb-3"
       />
-      <h3 className="font-semibold mt-2">{product.title}</h3>
-      <p className="text-gray-600 text-sm">{product.description}</p>
-      <p className="font-bold text-lg mt-1">R$ {product.price}</p>
+      <h3 className="text-md font-semibold mb-1 text-white">
+        {product.title}
+      </h3>
+      <p className="text-gray-400 text-sm mb-2">{product.category}</p>
+      <p className="text-emerald-400 font-bold mb-3">R$ {product.price}</p>
 
-      <div className="flex justify-between mt-2">
-        <button className="bg-blue-600 text-white px-3 py-1 rounded">
-          Ver detalhes
-        </button>
-        <button
-          onClick={() => onFavorite(product.id)}
-          className="bg-pink-500 text-white px-3 py-1 rounded"
-        >
-          ❤️
-        </button>
-      </div>
+      <button
+        onClick={toggleFavorite}
+        className={`absolute top-3 right-3 text-xl ${
+          fav ? "text-red-500" : "text-gray-500"
+        }`}
+      >
+        ♥
+      </button>
     </div>
-  )
-          }
+  );
+}
