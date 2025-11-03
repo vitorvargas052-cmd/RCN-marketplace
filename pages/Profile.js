@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import EditProfile from "../components/EditProfile";
 
 export default function ProfilePage() {
   const [user, setUser] = useState({
@@ -14,7 +15,7 @@ export default function ProfilePage() {
   const [section, setSection] = useState("overview");
 
   useEffect(() => {
-    // Aqui futuramente podemos buscar os dados reais do usuário (via Supabase)
+    // Aqui futuramente podemos buscar dados reais do Supabase/Firebase
   }, []);
 
   return (
@@ -48,8 +49,9 @@ export default function ProfilePage() {
         {/* Espaçamento abaixo do banner */}
         <div className="h-16"></div>
 
-        {/* Navegação lateral */}
+        {/* Estrutura principal */}
         <div className="flex flex-col md:flex-row">
+          {/* Menu lateral */}
           <aside className="md:w-1/4 bg-[#181818] border-r border-gray-800 p-4 space-y-3">
             <button
               onClick={() => setSection("overview")}
@@ -105,6 +107,17 @@ export default function ProfilePage() {
             >
               📜 Histórico
             </button>
+
+            <button
+              onClick={() => setSection("edit")}
+              className={`w-full text-left px-3 py-2 rounded-lg ${
+                section === "edit"
+                  ? "bg-emerald-600 text-white"
+                  : "text-gray-300 hover:bg-[#202020]"
+              }`}
+            >
+              ✏️ Editar perfil
+            </button>
           </aside>
 
           {/* Conteúdo principal */}
@@ -115,9 +128,9 @@ export default function ProfilePage() {
                   Visão geral
                 </h2>
                 <p className="text-gray-300">
-                  Aqui você pode visualizar e editar suas informações de
-                  perfil, ver seu desempenho como vendedor e acompanhar suas
-                  atividades recentes.
+                  Aqui você pode visualizar e editar suas informações de perfil,
+                  ver seu desempenho como vendedor e acompanhar suas atividades
+                  recentes.
                 </p>
               </div>
             )}
@@ -127,7 +140,9 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-semibold mb-4 text-emerald-400">
                   Meus anúncios
                 </h2>
-                <p className="text-gray-400">Você ainda não tem anúncios ativos.</p>
+                <p className="text-gray-400">
+                  Você ainda não tem anúncios ativos.
+                </p>
               </div>
             )}
 
@@ -163,9 +178,13 @@ export default function ProfilePage() {
                 </p>
               </div>
             )}
+
+            {section === "edit" && (
+              <EditProfile user={user} onSave={(updated) => setUser(updated)} />
+            )}
           </section>
         </div>
       </div>
     </Layout>
   );
-              }
+                }
