@@ -1,6 +1,22 @@
 "use client";
 import { useState } from "react";
 import { Camera, Save } from "lucide-react";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { initializeApp } from "firebase/app";
+
+// 🔥 Configuração do Firebase (use a sua config original)
+const firebaseConfig = {
+  apiKey: "AIzaSyBiCDUq_Z7I4DVVmHMKdji-JqfC7J875q4",
+  authDomain: "rcn-548e2.firebaseapp.com",
+  projectId: "rcn-548e2",
+  storageBucket: "rcn-548e2.firebasestorage.app",
+  messagingSenderId: "90448332592",
+  appId: "1:90448332592:web:1eeced84b5020657606af5",
+  measurementId: "G-DKD2VBX0MV",
+};
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 export default function EditProfile({ user, onSave }) {
   const [name, setName] = useState(user.name);
@@ -9,20 +25,24 @@ export default function EditProfile({ user, onSave }) {
   const [banner, setBanner] = useState(user.banner);
   const [saving, setSaving] = useState(false);
 
-  // Simula upload de imagem
-  const handleFileChange = async (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageURL = URL.createObjectURL(file);
-      if (type === "avatar") setAvatar(imageURL);
-      if (type === "banner") setBanner(imageURL);
-    }
+  const uploadImage = async (file, folder) => {
+    const storageRef = ref(storage, `${folder}/${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return url;
   };
 
-  // Simula salvar no banco de dados
+  const handleFileChange = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const imageURL = await uploadImage(file, type === "avatar" ? "avatars" : "banners");
+    if (type === "avatar") setAvatar(imageURL);
+    if (type === "banner") setBanner(imageURL);
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 1000)); // simulação
+    await new Promise((r) => setTimeout(r, 1000));
     setSaving(false);
     alert("Perfil atualizado com sucesso!");
     onSave({ name, description, avatar, banner });
@@ -103,4 +123,4 @@ export default function EditProfile({ user, onSave }) {
       </button>
     </div>
   );
-      }
+          }
