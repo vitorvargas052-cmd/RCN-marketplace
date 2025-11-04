@@ -1,128 +1,78 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Bell, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell } from "lucide-react";
+import { supabase } from "../utils/supabaseClient";
+import useAuth from "../hooks/useAuth";
 
 export default function Notifications() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
-  const [showPanel, setShowPanel] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
 
+  // 🔴 Escuta eventos em tempo real no Supabase
   useEffect(() => {
-    // Notificações simuladas
-    const initial = [
-      {
-        id: 1,
-        type: "message",
-        text: "💬 Você recebeu uma nova mensagem no chat.",
-        time: "Agora mesmo",
-        read: false,
-      },
-      {
-        id: 2,
-        type: "sale",
-        text: "🛒 Parabéns! Você fez uma nova venda.",
-        time: "10 min atrás",
-        read: false,
-      },
-      {
-        id: 3,
-        type: "rating",
-        text: "⭐ Seu perfil recebeu uma nova avaliação.",
-        time: "1h atrás",
-        read: true,
-      },
-    ];
+    if (!user) return;
 
-    setNotifications(initial);
-    setUnreadCount(initial.filter((n) => !n.read).length);
-  }, []);
+    const channel = supabase
+      .channel("realtime:notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
 
-  const togglePanel = () => setShowPanel(!showPanel);
-
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-    setUnreadCount((count) => Math.max(0, count - 1));
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-    setUnreadCount(0);
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   return (
     <div className="relative">
-      {/* Ícone do sino */}
+      {/* Ícone de sino */}
       <button
-        onClick={togglePanel}
-        className="relative text-gray-400 hover:text-emerald-400 transition"
+        onClick={() => setOpen(!open)}
+        className="relative p-3 bg-zinc-800 hover:bg-zinc-700 rounded-full transition"
       >
-        <Bell size={26} />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
-            {unreadCount}
-          </span>
+        <Bell size={22} />
+        {notifications.length > 0 && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
         )}
       </button>
 
-      {/* Painel lateral */}
-      {showPanel && (
-        <div className="absolute right-0 mt-3 w-80 bg-[#121212] border border-gray-800 rounded-2xl shadow-lg z-50">
-          <div className="flex justify-between items-center p-4 border-b border-gray-800">
-            <h2 className="text-emerald-400 font-semibold text-lg">
-              Notificações
-            </h2>
-            <button
-              onClick={togglePanel}
-              className="text-gray-400 hover:text-red-500"
-            >
-              <X size={20} />
-            </button>
+      {/* Lista de notificações */}
+      {open && (
+        <div className="absolute right-0 mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50">
+          <div className="p-3 border-b border-zinc-700 text-sm text-gray-300">
+            🔔 Notificações
           </div>
 
-          <div className="max-h-96 overflow-y-auto p-4 space-y-3">
-            {notifications.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center">
-                Nenhuma notificação no momento.
-              </p>
-            ) : (
-              notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={`p-3 rounded-xl border ${
-                    n.read
-                      ? "border-gray-800 bg-[#181818]"
-                      : "border-emerald-700 bg-[#0f0f0f]"
-                  }`}
-                >
-                  <p className="text-sm text-gray-200">{n.text}</p>
-                  <p className="text-xs text-gray-500 mt-1">{n.time}</p>
-                  {!n.read && (
-                    <button
-                      onClick={() => markAsRead(n.id)}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 mt-1"
-                    >
-                      Marcar como lida
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          {notifications.length > 0 && (
-            <div className="border-t border-gray-800 p-3 text-center">
-              <button
-                onClick={clearAll}
-                className="text-sm text-red-500 hover:text-red-400"
+          {notifications.length === 0 ? (
+            <p className="p-4 text-gray-500 text-sm text-center">
+              Nenhuma notificação.
+            </p>
+          ) : (
+            notifications.map((n, i) => (
+              <div
+                key={i}
+                className="p-3 border-b border-zinc-800 text-sm hover:bg-zinc-800 cursor-pointer"
               >
-                Limpar todas
-              </button>
-            </div>
+                <p className="text-gray-200">{n.message}</p>
+                <p className="text-gray-500 text-xs mt-1">
+                  {new Date(n.created_at).toLocaleString("pt-BR")}
+                </p>
+              </div>
+            ))
           )}
         </div>
       )}
     </div>
   );
-    }
+        }
